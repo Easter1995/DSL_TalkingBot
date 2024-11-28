@@ -37,9 +37,9 @@ pub fn execute_instruction(
                 Err(format!("无法跳转到不存在的模块: {}", target))
             }
         }
-        Instruction::Input(timeout, target) => {
+        Instruction::Input => {
             // 模拟用户输入
-            println!("等待输入 ({} ms):", timeout);
+            println!("等待输入:");
             let mut input = String::new();
             std::io::stdin().read_line(&mut input).unwrap();
             let input = input.trim().to_string();
@@ -48,7 +48,7 @@ pub fn execute_instruction(
                 context.variables.insert("last_input".to_string(), input);
                 Ok(None)
             } else {
-                Ok(Some(target.clone()))
+                Ok(None)
             }
         }
         Instruction::For(pattern, target) => {
@@ -127,9 +127,16 @@ pub fn execute_script(script: &Script) {
 
 fn replace_variables(text: &str, variables: &HashMap<String, String>) -> String {
     let mut result = text.to_string();
-    for (key, value) in variables {
-        result = result.replace(&format!("${{{}}}", key), value);
-    }
+    // 使用正则表达式匹配 `${key}` 格式的占位符
+    let re = regex::Regex::new(r"\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}").unwrap();
+
+    result = re.replace_all(&result, |caps: &regex::Captures| {
+        let key = &caps[1];
+        // 如果变量存在，替换为变量值；否则替换为 `{key}还没有初始化`
+        variables.get(key).cloned().unwrap_or_else(|| format!("{{{}}}还没有初始化", key))
+    })
+    .to_string();
+
     result
 }
 
@@ -139,7 +146,7 @@ fn parse_assignment(expression: &str, variables: &HashMap<String, String>) -> Re
         let var = parts[0].trim().to_string();
         let value_expr = parts[1].trim();
 
-        // 处理简单的加法表达式，例如 Number(balance) + Number(charge)
+        // 处理简单的加法表达式，例如 Number1 + Number2
         if value_expr.contains("Number(") {
             let re = Regex::new(r"Number\((\w+)\)").unwrap();
             let mut total = 0;

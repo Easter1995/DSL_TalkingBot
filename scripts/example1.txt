@@ -3,17 +3,15 @@ main {
     goto menu
 }
 menu {
-    input 10000 goto silence
+    input
     goto processInput
 }
 processInput {
     for /您好|你好/ goto hello
     for /余额/ goto balance
     for /充值/ goto pay
-    for /成绩/ goto grade
-    for /学费/ goto billing
+    for /退出/ goto exitPro
     for /退学/ goto unroll
-    for /人工/ goto service
     default goto default
 }
 hello {
@@ -26,7 +24,7 @@ balance {
 }
 pay {
     output "请输入您的充值金额"
-    input 0 goto pay
+    input
     save charge
     eval balance=Number(balance)+Number(charge)
     output "您已充值${charge}元，当前余额为${balance}元，请问还有什么可以帮到您？"
@@ -34,5 +32,13 @@ pay {
 }
 unroll {
     output "好的，已为您一键退学，再见"
+    goto exit
+}
+exit {
+    output "退出程序，再见"
+    exit
+}
+default {
+    output "对不起，我听不懂您在说什么"
     goto menu
 }

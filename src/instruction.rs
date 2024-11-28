@@ -8,7 +8,7 @@ use regex::Regex;
 pub enum Instruction {
     Output(String),      // 输出一段文本
     Goto(String),        // 跳转到指定模块
-    Input(u64, String),  // 超时时间，跳转模块名
+    Input,               // 读取用户输入
     For(String, String), // 正则表达式，跳转模块名
     DefaultGoto(String), // 默认跳转模块
     Save(String),        // 保存输入
@@ -47,12 +47,6 @@ pub fn parse_str_to_instruction(line: &str) -> Result<Option<Instruction>, Strin
         return Ok(Some(Instruction::Goto(target)));
     }
 
-    if let Some(caps) = Regex::new(r"^input\s+(\d+)\s+goto\s+(\w+)$").unwrap().captures(line) {
-        let timeout = caps.get(1).unwrap().as_str().parse::<u64>().map_err(|_| "解析超时时间失败")?;
-        let target = caps.get(2).unwrap().as_str().to_string();
-        return Ok(Some(Instruction::Input(timeout, target)));
-    }
-
     if let Some(caps) = Regex::new(r#"^for\s+/(.*)/\s+goto\s+(\w+)$"#).unwrap().captures(line) {
         let pattern = caps.get(1).unwrap().as_str().to_string();
         let target = caps.get(2).unwrap().as_str().to_string();
@@ -72,6 +66,10 @@ pub fn parse_str_to_instruction(line: &str) -> Result<Option<Instruction>, Strin
     if let Some(caps) = Regex::new(r#"^eval\s+(.*)$"#).unwrap().captures(line) {
         let expression = caps.get(1).unwrap().as_str().to_string();
         return Ok(Some(Instruction::Eval(expression)));
+    }
+
+    if line == "input" {
+        return Ok(Some(Instruction::Input));
     }
 
     if line == "exit" {
