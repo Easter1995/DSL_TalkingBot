@@ -1,6 +1,8 @@
 mod instruction;
-use std::io::{self, Read};
+mod execute;
+use std::io::{self};
 
+use execute::execute_script;
 use instruction::{parse_script_file, Script};
 
 fn main() {
@@ -16,4 +18,6 @@ fn main() {
             panic!("脚本解析错误: {}", err);
         }
     };
+
+    execute_script(&script);
 }

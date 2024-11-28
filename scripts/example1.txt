@@ -6,3 +6,33 @@ menu {
     input 10000 goto silence
     goto processInput
 }
+processInput {
+    for /您好|你好/ goto hello
+    for /余额/ goto balance
+    for /充值/ goto pay
+    for /成绩/ goto grade
+    for /学费/ goto billing
+    for /退学/ goto unroll
+    for /人工/ goto service
+    default goto default
+}
+hello {
+    output "您好，很高兴见到你。"
+    goto menu
+}
+balance {
+    output "您的校园卡余额是：${balance}，请问还有什么可以帮到您？"
+    goto menu
+}
+pay {
+    output "请输入您的充值金额"
+    input 0 goto pay
+    save charge
+    eval balance=Number(balance)+Number(charge)
+    output "您已充值${charge}元，当前余额为${balance}元，请问还有什么可以帮到您？"
+    goto menu
+}
+unroll {
+    output "好的，已为您一键退学，再见"
+    goto menu
+}

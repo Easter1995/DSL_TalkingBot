@@ -19,14 +19,14 @@ pub enum Instruction {
 // 定义模块
 #[derive(Debug, Clone)]
 pub struct Module {
-    name: String,
-    instructions: Vec<Instruction>,
+    pub name: String,
+    pub instructions: Vec<Instruction>,
 }
 
 // 定义整个脚本，由模块组成
 #[derive(Debug, Clone)]
 pub struct Script {
-    modules: HashMap<String, Module>,
+    pub modules: HashMap<String, Module>,
 }
 
 // 转换一行->指令
