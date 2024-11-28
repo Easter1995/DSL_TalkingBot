@@ -1,0 +1,8 @@
+main {
+    output "您好，您可以对我描述您的问题。"
+    goto menu
+}
+menu {
+    input 10000 goto silence
+    goto processInput
+}
