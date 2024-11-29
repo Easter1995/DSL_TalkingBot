@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::instruction::{Instruction, Script};
+use crate::instruction::{Instruction, Script, parse_script_file};
 use regex::Regex;
 
 // 脚本上下文
@@ -119,8 +119,7 @@ pub fn execute_script(script: &Script) {
     loop {
         // 执行模块
         if let Err(e) = execute_module(&mut context) {
-            eprintln!("模块执行错误: {}", e);
-            break;  
+            panic!("模块执行错误: {}", e);
         }
     }
 }
@@ -163,5 +162,23 @@ fn parse_assignment(expression: &str, variables: &HashMap<String, String>) -> Re
         }
     } else {
         Err("无效的赋值表达式".to_string())
+    }
+}
+
+#[test]
+#[should_panic]
+/// 测试模块不存在的情况
+fn test_module_not_exist_error() {
+    let test_file = "scripts/module_not_exist_error.txt";
+    let script = parse_script_file(test_file).expect("脚本解析失败");
+    let result = std::panic::catch_unwind(|| {
+        execute_script(&script);
+    });
+
+    assert!(result.is_err()); // 确保捕获到了错误
+    if let Err(err) = result {
+        let error_msg = format!("{:?}", err);
+        println!("Captured error: {}", error_msg); // 打印错误信息以验证
+        assert!(error_msg.contains("无法跳转到不存在的模块: foo"));
     }
 }

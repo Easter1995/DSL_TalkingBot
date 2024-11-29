@@ -1,0 +1,6 @@
+main {
+    goto bar
+}
+bar {
+    goto foo
+}
