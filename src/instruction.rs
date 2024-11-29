@@ -3,7 +3,7 @@ use std::io::{self, BufRead, BufReader};
 use std::fs::File;
 use regex::Regex;
 
-// 定义命令类型
+/// 定义命令类型
 #[derive(Clone, PartialEq, Debug)]
 pub enum Instruction {
     Output(String),      // 输出一段文本
@@ -16,27 +16,29 @@ pub enum Instruction {
     Exit,                // 退出
 }
 
-// 定义模块
+/// 定义模块
 #[derive(Debug, Clone)]
 pub struct Module {
-    pub name: String,
-    pub instructions: Vec<Instruction>,
+    pub name: String,                   // 模块名
+    pub instructions: Vec<Instruction>, // 模块中包含的指令
 }
 
-// 定义整个脚本，由模块组成
+/// 定义整个脚本
 #[derive(Debug, Clone)]
 pub struct Script {
-    pub modules: HashMap<String, Module>,
+    pub modules: HashMap<String, Module>, // 组成脚本的模块
 }
 
-// 转换一行->指令
+/// 对脚本文件中的一行进行词法分析和语法分析
+/// # Arguments
+///   - line: 脚本文件中的一行字符串 
 pub fn parse_str_to_instruction(line: &str) -> Result<Option<Instruction>, String> {
     let line = line.trim();
     if line.is_empty() {
         return Ok(None); // 跳过空行
     }
 
-    // 匹配不同的指令
+    // 利用正则表达式匹配不同的指令
     if let Some(caps) = Regex::new(r#"^output\s+"(.*)"$"#).unwrap().captures(line) {
         let text = caps.get(1).unwrap().as_str().to_string();
         return Ok(Some(Instruction::Output(text)));
@@ -76,9 +78,13 @@ pub fn parse_str_to_instruction(line: &str) -> Result<Option<Instruction>, Strin
         return Ok(Some(Instruction::Exit));
     }
 
+    // 返回错误类型
     Err(format!("无法解析指令：{}", line))
 }
 
+/// 对文件进行词法分析和语法分析
+/// # Arguments
+///   - file_name: 文件名
 pub fn parse_script_file(file_name: &str) -> Result<Script, io::Error> {
     let file = File::open(file_name)?;
     let reader = BufReader::new(file);
@@ -139,4 +145,45 @@ pub fn parse_script_file(file_name: &str) -> Result<Script, io::Error> {
     }
 
     Ok(Script { modules })
+}
+
+// 测试
+#[test]
+/// 测试规范的指令是否能被正确分析
+fn test_good_instructions() {
+    assert_eq!(parse_str_to_instruction("output \"output\""), Ok(Some(Instruction::Output("output".to_string()))));
+    assert_eq!(parse_str_to_instruction("goto module1"), Ok(Some(Instruction::Goto("module1".to_string()))));
+    assert_eq!(parse_str_to_instruction("input"), Ok(Some(Instruction::Input)));
+    assert_eq!(parse_str_to_instruction("for /hello|hi/ goto module2"), Ok(Some(Instruction::For("hello|hi".to_string(), "module2".to_string()))));
+    assert_eq!(parse_str_to_instruction("default goto default"), Ok(Some(Instruction::DefaultGoto("default".to_string()))));
+    assert_eq!(parse_str_to_instruction("save var"), Ok(Some(Instruction::Save("var".to_string()))));
+    assert_eq!(parse_str_to_instruction("eval balance=Number(balance)+Number(charge)"), Ok(Some(Instruction::Eval("balance=Number(balance)+Number(charge)".to_string()))));
+    assert_eq!(parse_str_to_instruction("exit"), Ok(Some(Instruction::Exit)));
+    assert_eq!(parse_str_to_instruction(""), Ok(None));
+}
+
+#[test]
+/// 测试错误的指令是否能被识别
+fn test_bad_instructions() {
+    assert_eq!(parse_str_to_instruction("badins"), Err("无法解析指令：badins".to_string()));
+    assert_eq!(parse_str_to_instruction("goto"), Err("无法解析指令：goto".to_string()));
+    assert_eq!(parse_str_to_instruction("output out"), Err("无法解析指令：output out".to_string()));
+}
+
+#[test]
+/// 测试script里面是否正确存储module
+fn test_parse_script_file() {
+    let test_file = "scripts/example1.txt";
+    if let Ok(script) = parse_script_file(&test_file) {
+        if let Some(main_module) = script.modules.get("main") {
+            if let Some(ins) = main_module.instructions.first() {
+                assert_eq!(*ins, Instruction::Output("您好，您可以对我描述您的问题。".to_string()));
+            }
+        }
+        if let Some(menu_module) = script.modules.get("menu") {
+            if let Some(ins) = menu_module.instructions.first() {
+                assert_eq!(*ins, Instruction::Input);
+            }
+        }
+    }
 }
