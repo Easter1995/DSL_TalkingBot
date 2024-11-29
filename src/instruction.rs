@@ -174,7 +174,7 @@ fn test_bad_instructions() {
 /// 测试script里面是否正确存储module
 fn test_parse_script_file() {
     let test_file = "scripts/example1.txt";
-    if let Ok(script) = parse_script_file(&test_file) {
+    if let Ok(script) = parse_script_file(test_file) {
         if let Some(main_module) = script.modules.get("main") {
             if let Some(ins) = main_module.instructions.first() {
                 assert_eq!(*ins, Instruction::Output("您好，您可以对我描述您的问题。".to_string()));

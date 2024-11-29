@@ -30,3 +30,16 @@ fn main() {
 
     execute_script(&script);
 }
+
+#[test]
+#[should_panic]
+/// 测试模块定义错误的脚本
+fn test_module_end_error() {
+    let test_file = "scripts/module_end_error.txt";
+    match parse_script_file(test_file.trim()) {
+        Ok(script) => script,
+        Err(err) => {
+            panic!("脚本解析错误: {}", err);
+        }
+    };
+}
