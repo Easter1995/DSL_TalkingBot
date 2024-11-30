@@ -18,6 +18,10 @@ impl Context {
     }
 }
 
+/// 执行指令
+/// Arguments:
+///   - instruction: 当前要执行的指令
+///   - context: 上下文，用于实现模块跳转和变量初始化/赋值
 pub fn execute_instruction(
     instruction: &Instruction,
     context: &mut Context,
@@ -96,6 +100,9 @@ pub fn execute_instruction(
     }
 }
 
+/// 执行上下文指定的当前模块
+/// Arguments:
+///   - context: 上下文
 pub fn execute_module(context: &mut Context) -> Result<(), String> {
     loop {
         let current_module_name = context.current_module.clone();
@@ -114,6 +121,9 @@ pub fn execute_module(context: &mut Context) -> Result<(), String> {
     }
 }
 
+/// 执行脚本
+/// Arguments
+///   - script: 要执行的脚本
 pub fn execute_script(script: &Script) {
     let mut context = Context::new("main", script.clone());
     loop {
@@ -124,6 +134,10 @@ pub fn execute_script(script: &Script) {
     }
 }
 
+/// 将${var}表示的变量替换为var的实际值
+/// Arguments:
+///   - text: 原始语句
+///   - variables: key为变量名，value为变量的实际值
 fn replace_variables(text: &str, variables: &HashMap<String, String>) -> String {
     let mut result = text.to_string();
     // 使用正则表达式匹配 `${key}` 格式的占位符
@@ -139,6 +153,11 @@ fn replace_variables(text: &str, variables: &HashMap<String, String>) -> String 
     result
 }
 
+/// 处理eval语句中的表达式，将表达式中出现的变量替换为实际值
+/// 目前只实现整数加法和赋值语句
+/// Arguments:
+///   - expression: 原始的表达式
+///   - variables: key为变量名，value为实际值
 fn parse_assignment(expression: &str, variables: &HashMap<String, String>) -> Result<Option<(String, String)>, String> {
     let parts: Vec<&str> = expression.split('=').collect();
     if parts.len() == 2 {
@@ -166,19 +185,73 @@ fn parse_assignment(expression: &str, variables: &HashMap<String, String>) -> Re
 }
 
 #[test]
-#[should_panic]
 /// 测试模块不存在的情况
 fn test_module_not_exist_error() {
     let test_file = "scripts/module_not_exist_error.txt";
-    let script = parse_script_file(test_file).expect("脚本解析失败");
+    let script = parse_script_file(test_file).expect("Failed to parse script file");
+    // 捕获执行脚本时的 panic
     let result = std::panic::catch_unwind(|| {
         execute_script(&script);
     });
-
-    assert!(result.is_err()); // 确保捕获到了错误
+    // 确保捕获到了错误
+    assert!(result.is_err(), "Expected an error, but the script executed successfully");
+    // 验证错误信息是否正确
     if let Err(err) = result {
-        let error_msg = format!("{:?}", err);
-        println!("Captured error: {}", error_msg); // 打印错误信息以验证
-        assert!(error_msg.contains("无法跳转到不存在的模块: foo"));
+        if let Some(error_msg) = err.downcast_ref::<String>() {
+            println!("Captured error: {}", error_msg);
+            assert!(
+                error_msg.contains("无法跳转到不存在的模块: foo"),
+                "Expected error message to contain '无法跳转到不存在的模块: foo', but got: {}",
+                error_msg
+            );
+        } else if let Some(error_msg) = err.downcast_ref::<&str>() {
+            println!("Captured error: {}", error_msg);
+            assert!(
+                error_msg.contains("无法跳转到不存在的模块: foo"),
+                "Expected error message to contain '无法跳转到不存在的模块: foo', but got: {}",
+                error_msg
+            );
+        } else {
+            panic!(
+                "Expected a String or &str error message, but got an unknown type: {:?}",
+                err
+            );
+        }
+    }
+}
+
+#[test]
+/// 验证main模块不存在的情况
+fn test_no_main() {
+    let test_file = "scripts/no_main.txt";
+    let script = parse_script_file(test_file).expect("Failed to parse script file");
+    // 捕获执行脚本时的 panic
+    let result = std::panic::catch_unwind(|| {
+        execute_script(&script);
+    });
+    // 确保捕获到了错误
+    assert!(result.is_err(), "Expected an error, but the script executed successfully");
+    // 验证错误信息是否正确
+    if let Err(err) = result {
+        if let Some(error_msg) = err.downcast_ref::<String>() {
+            println!("Captured error: {}", error_msg);
+            assert!(
+                error_msg.contains("模块 'main' 不存在"),
+                "Expected error message to contain '模块 'main' 不存在', but got: {}",
+                error_msg
+            );
+        } else if let Some(error_msg) = err.downcast_ref::<&str>() {
+            println!("Captured error: {}", error_msg);
+            assert!(
+                error_msg.contains("模块 'main' 不存在"),
+                "Expected error message to contain '模块 'main' 不存在', but got: {}",
+                error_msg
+            );
+        } else {
+            panic!(
+                "Expected a String or &str error message, but got an unknown type: {:?}",
+                err
+            );
+        }
     }
 }
