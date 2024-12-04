@@ -13,18 +13,20 @@
 ### 项目结构
 
 ```
-├── Cargo.lock        //记录依赖包元数据，cargo自动维护
-├── Cargo.toml        //cargo项目管理脚本，维护项目信息和依赖包
+├── Cargo.lock          // 记录依赖包元数据，cargo自动维护
+├── Cargo.toml          // cargo项目管理脚本，维护项目信息和依赖包
 ├── README.md  
-├── scripts	          //脚本样例		
+├── scripts	            // 脚本样例		
 │   ├── example1.txt
 │   ├── module_end_error.txt
 │   ├── module_not_exist_error.txt
 │   └── no_main.txt
-└── src		           // 项目源码
-    ├── execute.rs     // 将指令转换为可执行的程序
-    ├── instruction.rs // 将脚本翻译为指令
-    └── main.rs	       //程序入口，读取文件
+├── src		            // 项目源码
+│    ├── execute.rs     // 将指令转换为可执行的程序
+│    ├── instruction.rs // 将脚本翻译为指令
+│    └── main.rs	    // 程序入口，读取文件
+└── tests			    // 测试
+	 └── tests.rs
 ```
 
 ## 程序使用方法
