@@ -1,9 +1,7 @@
-mod instruction;
-mod execute;
 use std::io::{self};
 
-use execute::execute_script;
-use instruction::{parse_script_file, Script};
+use talking_bot::execute::execute_script;
+use talking_bot::instruction::{parse_script_file, Script};
 
 fn main() {
     let mut script_path: String = String::new();
@@ -29,17 +27,4 @@ fn main() {
     };
 
     execute_script(&script);
-}
-
-#[test]
-#[should_panic]
-/// 测试模块定义错误的脚本
-fn test_module_end_error() {
-    let test_file = "scripts/module_end_error.txt";
-    match parse_script_file(test_file.trim()) {
-        Ok(script) => script,
-        Err(err) => {
-            panic!("脚本解析错误: {}", err);
-        }
-    };
 }

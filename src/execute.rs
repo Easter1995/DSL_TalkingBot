@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::instruction::{Instruction, Script, parse_script_file};
+use crate::instruction::{Instruction, Script};
 use regex::Regex;
 
 // 脚本上下文
@@ -181,77 +181,5 @@ fn parse_assignment(expression: &str, variables: &HashMap<String, String>) -> Re
         }
     } else {
         Err("无效的赋值表达式".to_string())
-    }
-}
-
-#[test]
-/// 测试模块不存在的情况
-fn test_module_not_exist_error() {
-    let test_file = "scripts/module_not_exist_error.txt";
-    let script = parse_script_file(test_file).expect("Failed to parse script file");
-    // 捕获执行脚本时的 panic
-    let result = std::panic::catch_unwind(|| {
-        execute_script(&script);
-    });
-    // 确保捕获到了错误
-    assert!(result.is_err(), "Expected an error, but the script executed successfully");
-    // 验证错误信息是否正确
-    if let Err(err) = result {
-        if let Some(error_msg) = err.downcast_ref::<String>() {
-            println!("Captured error: {}", error_msg);
-            assert!(
-                error_msg.contains("无法跳转到不存在的模块: foo"),
-                "Expected error message to contain '无法跳转到不存在的模块: foo', but got: {}",
-                error_msg
-            );
-        } else if let Some(error_msg) = err.downcast_ref::<&str>() {
-            println!("Captured error: {}", error_msg);
-            assert!(
-                error_msg.contains("无法跳转到不存在的模块: foo"),
-                "Expected error message to contain '无法跳转到不存在的模块: foo', but got: {}",
-                error_msg
-            );
-        } else {
-            panic!(
-                "Expected a String or &str error message, but got an unknown type: {:?}",
-                err
-            );
-        }
-    }
-}
-
-#[test]
-/// 验证main模块不存在的情况
-fn test_no_main() {
-    let test_file = "scripts/no_main.txt";
-    let script = parse_script_file(test_file).expect("Failed to parse script file");
-    // 捕获执行脚本时的 panic
-    let result = std::panic::catch_unwind(|| {
-        execute_script(&script);
-    });
-    // 确保捕获到了错误
-    assert!(result.is_err(), "Expected an error, but the script executed successfully");
-    // 验证错误信息是否正确
-    if let Err(err) = result {
-        if let Some(error_msg) = err.downcast_ref::<String>() {
-            println!("Captured error: {}", error_msg);
-            assert!(
-                error_msg.contains("模块 'main' 不存在"),
-                "Expected error message to contain '模块 'main' 不存在', but got: {}",
-                error_msg
-            );
-        } else if let Some(error_msg) = err.downcast_ref::<&str>() {
-            println!("Captured error: {}", error_msg);
-            assert!(
-                error_msg.contains("模块 'main' 不存在"),
-                "Expected error message to contain '模块 'main' 不存在', but got: {}",
-                error_msg
-            );
-        } else {
-            panic!(
-                "Expected a String or &str error message, but got an unknown type: {:?}",
-                err
-            );
-        }
     }
 }
